@@ -22,4 +22,22 @@ function App() {
   );
 }
 
+function createRoom() {
+  print('Room Created');
+}
+
+function joinRoom(id) {
+  print('you have joined the room');
+}
+
+function playerJoined(doc) {
+  if (doc.userids.length == 4) {
+    startGame();
+  }
+}
+
+function startGame(){
+
+}
+
 export default App;
