@@ -71,7 +71,13 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      hand: []
+      hand: [],
+      currentTrick: {
+        topCardImg: null,
+        rightCardImg: null,
+        bottomCardImg: null,
+        leftCardImg: null
+      }
     }
   }
 
@@ -88,9 +94,38 @@ class App extends React.Component {
     console.log(currentDeck);
     
     const playerHand = currentDeck.slice(0, numCardsToPlayer);
-    // TODO: how to render hand dynamically?
     this.setState({
       hand: playerHand
+    });
+
+    // TODO: send remote hand to other players
+  }
+
+  onCardClick(cardImgUrl, cardIndexInPlayerHand) {
+    console.log('Clicked on card in hard at index', cardIndexInPlayerHand);
+    // TODO: is card valid to play?
+    // TODO: send network event to all players that this card was played
+
+    // Remove played card from player's hand
+    const hand = this.state.hand.slice();
+    hand.splice(cardIndexInPlayerHand, 1);
+    this.setState({
+      hand: hand
+    });
+
+    this.onCardPlayed(cardImgUrl, 'bottomCardImg');
+  }
+
+  /**
+   * Display card in center trick area.
+   * Assumes card being played is only current player's card.
+   * @param {*} cardImgUrl 
+   */
+  onCardPlayed(cardImgUrl, locationKey) {
+    const currentTrick = this.state.currentTrick;
+    currentTrick[locationKey] = cardImgUrl;
+    this.setState({
+      currentTrick
     });
   }
 
@@ -100,13 +135,31 @@ class App extends React.Component {
       displayhand.push(new Card({ img: cardImg, faceup: true }));
     });
 
+    let topTrickCard = this.state.currentTrick.topCardImg ? (<Card img={this.state.currentTrick.topCardImg} faceup={true}></Card>) : null;
+    let rightTrickCard = this.state.currentTrick.rightCardImg ? (<Card img={this.state.currentTrick.rightCardImg} faceup={true}></Card>) : null;;
+    let bottomTrickCard = this.state.currentTrick.bottomCardImg ? (<Card img={this.state.currentTrick.bottomCardImg} faceup={true}></Card>) : null;;
+    let leftTrickCard = this.state.currentTrick.leftCardImg ? (<Card img={this.state.currentTrick.leftCardImg} faceup={true}></Card>) : null;;
+
     return (
       <div className="App">
 
         <div className="table" id="table">
-          {this.state.hand.map((card) => {
-            return (<Card img={card} faceup={true}></Card>)
-          })}
+          <div id="myHand">
+            {this.state.hand.map((card, cardIndex) => {
+              return (
+                <span onClick={() => this.onCardClick(card, cardIndex)}>
+                  <Card img={card} faceup={true} key={cardIndex}></Card>
+                </span>
+              )
+            })}
+          </div>
+
+          <div id="currentTrick">
+            <div id="topTrickCard">{topTrickCard}</div>
+            <div id="rightTrickCard">{rightTrickCard}</div>
+            <div id="bottomTrickCard">{bottomTrickCard}</div>
+            <div id="leftTrickCard">{leftTrickCard}</div>
+          </div>
         </div>
 
         <button onClick={() => this.deal()}>Deal</button>

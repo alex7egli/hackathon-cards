@@ -10,7 +10,7 @@ class Card extends React.Component {
 
   getFaceupCard() {
     return (
-      <img class="card" src={this.props.img} alt="card" />
+      <img className="card" src={this.props.img} alt="card" />
     )
   }
 
