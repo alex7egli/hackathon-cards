@@ -67,7 +67,23 @@ const deck = {
   's': [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14 ],
 };
 
+class CardData {
+  id; //d3
+  cardImgUrl; //"/static/media/d7.e88a7348.svg"
+  
+  getValueFromId() {
+    // queen of spades
+    if (this.id === 's12') {
+      return 13;
+    } else if (this.id.charAt(0) === 'h') {
+      return 1;
+    }
+  }
+}
+
 class App extends React.Component {
+  myPlayerId;
+
   constructor() {
     super();
     this.state = {
@@ -77,8 +93,90 @@ class App extends React.Component {
         rightCardImg: null,
         bottomCardImg: null,
         leftCardImg: null
+      },
+      gameDoc: null,
+      selectedPassingCards: []
+    }
+  }
+
+  iAmOwner() {
+    return this.myPlayerId === 0;
+  }
+
+  /**
+   * Called whenever gameDoc changed.
+   */
+  onGameDocChanged(gameDoc) {
+    if (gameDoc.state === 'initial hand') {
+      // if everyone has submitted their 3 passed cards
+      if (this.iAmOwner()) {
+        // update each player's hand so the 3 cards they selected are removed
+        // add 3 passed cards to my hand
+        // TODO: need gamestate to store what direction we are passing in
+        for (let i = 0; i < 4; i++) {
+          const playerHand = gameDoc.players.hand;
+          // Passing = to the left, then to the right, then across, then no pass.
+          // TODO: Check logic, add unit tests!
+          const playerIdMyCardsAreFrom = (i + gameDoc.currentRoundNumber) % 4;
+        }
       }
     }
+  }
+
+  createRoom() {
+    const gameDocId = '12345';
+    this.myPlayerId = 0;
+
+    const gameDoc = {
+      id: '12345',
+      players: [
+        {
+          name: 'Alex',
+          hand: [{ id: 'd7', img: "/static/media/d7.e88a7348.svg"}], // array of cardImgUrls
+          wonScoringCards: [],
+          currentScore: 0,
+          totalGameScore: 0,
+          selectedPassingCards: []
+        }
+      ],
+      state: 'waiting for players to join',
+      currentPlayer: null, // player id, index of player in playerHands
+      currentRoundNumber: 1
+    };
+
+    // create new doc represents game, return a doc id
+    // create first player in game
+  }
+
+  joinRoom() {
+    // get gameDocId from the url
+    // add ourself as a player to that game (update gameDoc)
+  }
+
+  /**
+   * Using firestore stream we listen to gameDocId doc changes and call this method appropriately.
+   */
+  someoneHasJoinedRoom() {
+    // check if room has four players
+    const numPlayersInRoom = 4; // TODO: get from game doc
+    const iAmOwner = false; // TODO: get from game doc
+    if (numPlayersInRoom === 4 && iAmOwner) {
+      this.startGame();
+    }
+  }
+
+  /**
+   * Remote doc gets updated and calls this with my hand.
+   * @param {*} myHand 
+   */
+  ihaveBeenDealtAHand(myHand) {
+    this.setState({
+      hand: myHand
+    });
+  }
+
+  startGame() {
+    this.deal();
   }
 
   deal() {
@@ -93,15 +191,31 @@ class App extends React.Component {
     CardsLogic.shuffle(currentDeck);
     console.log(currentDeck);
     
-    const playerHand = currentDeck.slice(0, numCardsToPlayer);
-    this.setState({
-      hand: playerHand
-    });
+    // LOCAL DEBUG UI
+    // const playerHand = currentDeck.slice(0, numCardsToPlayer);
+    // this.setState({
+    //   hand: playerHand
+    // });
 
-    // TODO: send remote hand to other players
+    const player1Hand = currentDeck.slice(0, numCardsToPlayer);
+    const player2Hand = currentDeck.slice(numCardsToPlayer, (numCardsToPlayer * 2));
+    const player3Hand = currentDeck.slice(numCardsToPlayer * 2, (numCardsToPlayer * 3));
+    const player4Hand = currentDeck.slice(numCardsToPlayer * 3);
+
+    // TODO: send remote hand to other players, update gameDoc
   }
 
   onCardClick(cardImgUrl, cardIndexInPlayerHand) {
+    if (this.state.gameDoc.state === 'initial hand') {
+      // clicking card to select for pass
+      /* if (clicked card is selected) {
+        deselect it  (TODO: UI)
+      } else {
+        select it (TODO: UI)
+        update this.state.selectedPassingCards
+      }
+      */
+    } else if (this.state.gameDoc.state === 'ready to play' && this.state.gameDoc.state.currentPlayer === this.myPlayerId) {
     console.log('Clicked on card in hard at index', cardIndexInPlayerHand);
     // TODO: is card valid to play?
     // TODO: send network event to all players that this card was played
@@ -115,6 +229,7 @@ class App extends React.Component {
 
     this.onCardPlayed(cardImgUrl, 'bottomCardImg');
   }
+  }
 
   /**
    * Display card in center trick area.
@@ -127,6 +242,10 @@ class App extends React.Component {
     this.setState({
       currentTrick
     });
+  }
+
+  submitPass() {
+    // Update gameDoc with flag that I have submitted my passed cards
   }
 
   render() {
@@ -162,6 +281,9 @@ class App extends React.Component {
           </div>
         </div>
 
+            // need button for submitting passing, only visible if in passing state
+            // only enabled if 3 cards seleted for passing
+            <button onClick={() => this.submitPass()}>Pass Cards</button>
         <button onClick={() => this.deal()}>Deal</button>
       </div>
     );
