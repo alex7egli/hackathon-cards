@@ -68,6 +68,13 @@ const deck = {
 };
 
 class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      hand: []
+    }
+  }
+
   deal() {
     const numCardsToPlayer = 13;
     const currentDeck = [];
@@ -80,16 +87,26 @@ class App extends React.Component {
     CardsLogic.shuffle(currentDeck);
     console.log(currentDeck);
     
-    const playerHand = currentDeck.slice(0, 14);
+    const playerHand = currentDeck.slice(0, numCardsToPlayer);
     // TODO: how to render hand dynamically?
+    this.setState({
+      hand: playerHand
+    });
   }
 
   render() {
+    const displayhand = [];
+    this.state.hand.forEach((cardImg) => {
+      displayhand.push(new Card({ img: cardImg, faceup: true }));
+    });
+
     return (
       <div className="App">
 
         <div className="table" id="table">
-          <div id="hand"></div>
+          {this.state.hand.map((card) => {
+            return (<Card img={card} faceup={true}></Card>)
+          })}
         </div>
 
         <button onClick={() => this.deal()}>Deal</button>
